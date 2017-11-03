@@ -1148,7 +1148,8 @@ def cmd_test(options, args, tests=None):
     # -n is the number of processes to run in parallel
     # --timeout will kill the test process if it gets stuck
     jobs = '-n{}'.format(options.pytest_jobs) if options.pytest_jobs else ''
-    boxed = '--boxed' if not isWindows else ''
+    # DISABLED 16-oct-2017 boxed = '--boxed' if not isWindows else ''
+    boxed = ''
     sec = options.pytest_timeout
     timeout = '--timeout={}'.format(sec) if sec and sec != "0" else ''
     cmd = '"{}" -m pytest {} {} {} {} {} '.format(
