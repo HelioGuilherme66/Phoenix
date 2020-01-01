@@ -2645,7 +2645,7 @@ class MaskedEditMixin:
                         raise ve
                     elif replace_to > end:
 ####                        dbg(indent=0)
-                        ve = ValueError('"%s" will not fit into field %d of control "%s"' (choice, index, self.name))
+                        ve = ValueError('"%s" will not fit into field %d of control "%s"' % (choice, index, self.name))
                         ve.value = choice
                         ve.index = index
                         raise ve
@@ -6338,7 +6338,7 @@ class MaskedEditMixin:
         wx.EVT_UPDATE_UI(self, wx.ID_UNDO, self._UndoUpdateUI)
         self._contextMenu = menu
 
-        self.PopupMenu(menu, event.GetPosition())
+        self.PopupMenu(menu)
         menu.Destroy()
         self._contextMenu = None
 ##        dbg(indent=0)

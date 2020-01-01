@@ -28,6 +28,8 @@ ITEMS  = [ 'wxFontMetrics',
            'wxDCPenChanger',
            'wxDCTextColourChanger',
            'wxDCFontChanger',
+           'wxDCTextBgColourChanger',
+           'wxDCTextBgModeChanger',
            ]
 
 OTHERDEPS = [ 'src/dc_ex.cpp', ]
@@ -82,13 +84,17 @@ def run():
     c.find('GetLogicalOrigin.x').out = True
     c.find('GetLogicalOrigin.y').out = True
 
+    c.find('GetClippingBox').findOverload('wxRect').ignore()
     c.find('GetClippingBox.x').out = True
     c.find('GetClippingBox.y').out = True
     c.find('GetClippingBox.width').out = True
     c.find('GetClippingBox.height').out = True
     c.addPyMethod('GetClippingRect', '(self)',
-        doc="Gets the rectangle surrounding the current clipping region",
-        body="return wx.Rect(*self.GetClippingBox())")
+        doc="Returns the rectangle surrounding the current clipping region as a wx.Rect.",
+        body="""\
+            rv, x, y, w, h = self.GetClippingBox()
+            return wx.Rect(x,y,w,h)
+            """)
 
 
     # Deal with the text-extent methods. In Classic we renamed one overloaded
@@ -499,6 +505,24 @@ def run():
 
     #-----------------------------------------------------------------
     c = module.find('wxDCFontChanger')
+    assert isinstance(c, etgtools.ClassDef)
+    c.addPrivateCopyCtor()
+    # context manager methods
+    c.addPyMethod('__enter__', '(self)', 'return self')
+    c.addPyMethod('__exit__', '(self, exc_type, exc_val, exc_tb)', 'return False')
+
+
+    #-----------------------------------------------------------------
+    c = module.find('wxDCTextBgColourChanger')
+    assert isinstance(c, etgtools.ClassDef)
+    c.addPrivateCopyCtor()
+    # context manager methods
+    c.addPyMethod('__enter__', '(self)', 'return self')
+    c.addPyMethod('__exit__', '(self, exc_type, exc_val, exc_tb)', 'return False')
+
+
+    #-----------------------------------------------------------------
+    c = module.find('wxDCTextBgModeChanger')
     assert isinstance(c, etgtools.ClassDef)
     c.addPrivateCopyCtor()
     # context manager methods

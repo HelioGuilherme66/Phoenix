@@ -226,6 +226,7 @@ def main(wxDir, args):
         "features"      : ("", "A comma-separated list of wxUSE_XYZ defines on Win, or a list of configure flags on unix."),
         "verbose"       : (False, "Print commands as they are run, (to aid with debugging this script)"),
         "jom"           : (False, "Use jom.exe instead of nmake for MSW builds."),
+        "no_dpi_aware"  : (False, "Don't use the DPI_AWARE_MANIFEST."),
     }
 
     parser = optparse.OptionParser(usage="usage: %prog [options]", version="%prog 1.0")
@@ -280,10 +281,8 @@ def main(wxDir, args):
                 configure_opts.append("--with-gtk=2")
 
         wxpy_configure_opts = [
-                            "--with-opengl",
                             "--enable-sound",
                             "--enable-graphics_ctx",
-                            "--enable-mediactrl",
                             "--enable-display",
                             "--enable-geometry",
                             "--enable-debug_flag",
@@ -303,16 +302,16 @@ def main(wxDir, args):
         # version present on the build machine.
         # TODO: should there be a command line option to set the SDK?
         if sys.platform.startswith("darwin"):
-            wxpy_configure_opts.append("--with-macosx-version-min=10.6")
-            for xcodePath in getXcodePaths():
-                sdks = [ xcodePath+"/SDKs/MacOSX10.{}.sdk".format(n)
-                         for n in range(6, 15) ]
-                # use the lowest available sdk on the build machine
-                for sdk in sdks:
-                    if os.path.exists(sdk):
-                        wxpy_configure_opts.append(
-                            "--with-macosx-sdk=%s" % sdk)
-                        break
+            wxpy_configure_opts.append("--with-macosx-version-min=10.9")
+            # for xcodePath in getXcodePaths():
+            #     sdks = [ xcodePath+"/SDKs/MacOSX10.{}.sdk".format(n)
+            #              for n in range(9, 15) ]
+            #     # use the lowest available sdk on the build machine
+            #     for sdk in sdks:
+            #         if os.path.exists(sdk):
+            #             wxpy_configure_opts.append(
+            #                 "--with-macosx-sdk=%s" % sdk)
+            #             break
 
         if not options.mac_framework:
             if installDir and not prefixDir:
@@ -406,6 +405,7 @@ def main(wxDir, args):
             flags["wxUSE_DATEPICKCTRL_GENERIC"] = "1"
             flags["wxUSE_IFF"] = "1"
             flags["wxUSE_ACCESSIBILITY"] = "1"
+            flags["wxUSE_WINRT"] = "0"
 
             # Remove this when Windows XP finally dies, or when there is a
             # solution for ticket #13116...
@@ -468,6 +468,10 @@ def main(wxDir, args):
 
             if options.jom:
                 nmakeCommand = 'jom.exe'
+
+            if options.no_dpi_aware:
+                args.append("USE_DPI_AWARE_MANIFEST=0")
+
 
             wxBuilder = builder.MSVCBuilder(commandName=nmakeCommand)
 

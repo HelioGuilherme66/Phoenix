@@ -184,6 +184,8 @@ INCLUDES = [  # base and core stuff
               'treebook',
               'simplebook',
               'vlbox',
+              'activityindicator',
+              'collheaderctrl',
 
               # toplevel and dialogs
               'nonownedwnd',

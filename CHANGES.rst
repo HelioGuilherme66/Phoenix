@@ -17,32 +17,174 @@ Extras: https://extras.wxPython.org/wxPython4/extras/
 Pip:    ``pip install wxPython==4.1.0``
 
 Starting with this release wxPython has switched to tracking the wxWidgets
-master branch for the wxWidgets source code which wxPython is built upon, and
-which is included in the wxPython source archives. Along with this change a new
-``wxPy-4.0.x`` branch has been created in the git repository for continuing
-maintenance releases of the 4.0.x series of wxPython, which will still track the
-``WX_3_0_BRANCH`` wxWidgets branch.
+master branch (version 3.1.x) for the wxWidgets source code, which wxPython is
+built upon, and which is included in the wxPython source archives. 
 
+New and improved in this release:
 
-New and improved stuff in this release:
+* Add wx.Font.AddPrivateFont example to the demo.
 
 * Added wrappers for the OSXEnableAutomaticQuoteSubstitution,
   OSXEnableAutomaticDashSubstitution, and OSXDisableAllSmartSubstitutions
-  methods in wx.TextCtrl.
+  methods in wx.TextCtrl. Also added OSXEnableAutomaticTabbing in wx.App.
 
-
-Other changes in this release:
+* Added wx.ColourDialogEvent, wx.DCTextBgColourChanger, wx.DCTextBgModeChanger,
+  wx.grid.GridCellDateRenderer, wx.grid.GridCellDateEditor, wx.SystemAppearance,
+  etc.
 
 * Many of the deprecated items in wxWidgets and wxPython are being or have
   been removed. Be sure to test your code in 4.0.2 or a later 4.0.x release
   with warnings enabled so you can see which class, method or function calls
   you need to change.
 
+* Bug fixes in wx.lib.calendar: key navigation across month boundaries is now 
+  possible; key navigation now sets the date and fires the EVT_CALENDAR event; 
+  setter APIs now set the date correctly (#1230).
+
+* Switch to using a wx.Overlay in the Widget Inspection Tool to highlight
+  widgets when running on a GTK3 port.
+
+* Fixed issue in wx.lib.agw.customtreectrl where label editor could remain
+  stuck forever (#1235).
+
+* Grafted on a EnableSystemTheme method to the classes which support it. This
+  can be used to disable the default system theme on Windows for native widgets
+  like wx.ListCtrl, wx.TreeCtrl and wx.dataview.DataViewCtrl. It has no effect 
+  on the other platforms.
+
+* The wx.WS_EX_VALIDATE_RECURSIVELY extended style flag is obsolete, as it is
+  now the default (and only) behavior. The style flag has been added back into
+  wxPython for compatibility, but with a zero value. You can just stop using it
+  in your code with no change in behavior. (#1278)
+
+* Fix a sometimes crash when using a wx.Overlay by letting the wx.DCOverlay hold
+  a reference to the DC, to ensure that the DCOverlay is destroyed first.
+  (PR#1301)
+  
+* Replaced the Vagrant VMs used for building wxPython for various Linux distros
+  with Docker images.
+
+* Add some missing methods in wx.adv.BitmapComboBox (#1307)
+
+* Added the wx.svg package which contains code for parsing SVG (Scalable Vector 
+  Graphics) files, and also code for integrating with wxPython. It can rasterize
+  the SVG to a wx.Bitmap of any size with no loss of quality, and it can also
+  render the SVG directly to a wx.GraphicsContext using the GC's drawing
+  primitives. (PR #1323)
+
+* Ported the embedding sample from Classic, which shows how to use wxPython from
+  a C++ wxWidgets application that embeds Python. (PR #1353)
+
+* Fixed wx.GetApp() to use wxWidgets' global wxApp instance instead of 
+  maintaining its own pointer. This way, if the wxApp is created by C++ code
+  wxPython will still be able to get access to it. (#1126)
+  
+* Added wrappers for the wx.ActivityIndicator class.
+
+* Added wrappers for the wx.CollapsibleHeaderCtrl class.
+
+* Fixed issues in PlotCanvas around displaying and using scrollbars. (#1428)
 
 
-4.0.5
------
-* (not yet released)
+
+
+4.0.7.post2 "To QTKit, or not to QTKit..."
+------------------------------------------
+* 12-Nov-2019
+
+PyPI:   https://pypi.org/project/wxPython/4.0.7.post2
+Extras: https://extras.wxPython.org/wxPython4/extras/
+Pip:    ``pip install wxPython==4.0.7.post2``
+
+This post-release changes a wxWidgets configure option on macOS so the build
+will be forced to use AVFoundation instead of QTKit. This ensures that
+wxMediaCtrl will work on macOS 10.15+, where all support for QTKit has been
+removed.
+
+
+
+4.0.7.post1 "Isn't it time for Python3?"
+----------------------------------------
+* 28-Oct-2019
+
+PyPI:   https://pypi.org/project/wxPython/4.0.7.post1
+Extras: https://extras.wxPython.org/wxPython4/extras/
+Pip:    ``pip install wxPython==4.0.7.post1``
+
+This post-release just fixes a problem with the numpy dependency constraint for
+Python 2.7. (#1415)
+
+
+
+4.0.7 "one more, for the road"
+------------------------------
+* 25-Oct-2019
+
+PyPI:   https://pypi.org/project/wxPython/4.0.7
+Extras: https://extras.wxPython.org/wxPython4/extras/
+Pip:    ``pip install wxPython==4.0.7``
+
+This release is comprised mostly of fixes and minor features which have been
+back-ported from the master branch. This release is likely the last release of
+the 4.0.x release series, and is certainly the last 4.0.x release that will
+support Python 2.7. It may still continue to build for Python 2.7 for some time, 
+but no extra effort will be expended to keep it compatible.
+
+This release provides the following changes:
+
+* Bug fixes in wx.lib.calendar: key navigation across month boundaries is now 
+  possible; key navigation now sets the date and fires the EVT_CALENDAR event; 
+  setter APIs now set the date correctly (#1230).
+
+* Switch to using a wx.Overlay in the Widget Inspection Tool to highlight
+  widgets when running on a GTK3 port.
+
+* Fixed issue in wx.lib.agw.customtreectrl where label editor could remain
+  stuck forever (#1235).
+
+* Fix a sometimes crash when using a wx.Overlay by letting the wx.DCOverlay hold
+  a reference to the DC, to ensure that the DCOverlay is destroyed first.
+  (PR#1301)
+  
+* Ported the embedding sample from Classic, which shows how to use wxPython from
+  a C++ wxWidgets application that embeds Python. (PR #1353)
+
+* Fixed wx.GetApp() to use wxWidgets' global wxApp instance instead of 
+  maintaining its own pointer. This way, if the wxApp is created by C++ code
+  wxPython will still be able to get access to it. (#1126)
+  
+* Several other PRs have been backported from the master branch (which will 
+  become wxPython 4.1.0), the full list can be seen here: 
+  https://github.com/wxWidgets/Phoenix/pull/1357
+
+
+
+
+4.0.6 "Applesauce"
+------------------
+* 21-May-2019
+
+PyPI:   https://pypi.org/project/wxPython/4.0.6
+Extras: https://extras.wxPython.org/wxPython4/extras/
+Pip:    ``pip install wxPython==4.0.6``
+
+This release provides the following fixes:
+
+* Fixed a probably rare, but fatal bug on OSX when calling certain overloaded
+  virtual methods with implementations in Python.
+
+* Fixed char pointers in generated stub code to have a valid pointer value.
+
+* Reverted the change that loads up install_requires from the contents of
+  requirements.txt. Split the requirements.txt file into one for install and one
+  for development.
+  
+  
+
+
+4.0.5 "St. Helens Day"
+----------------------
+* 18-May-2019
 
 PyPI:   https://pypi.org/project/wxPython/4.0.5
 Extras: https://extras.wxPython.org/wxPython4/extras/
@@ -65,11 +207,18 @@ Changes in this release include the following:
 * Fixed a crashing bug when using a member of a transient wx.VisualAttributes
   object. Also set the attributes to be read-only to simplify the fix. (#1198).
   
-* Updated sip to version 4.19.16.
+* Updated the sip being used in wxPython builds to version 4.19.16.
 
 * Added helper functions to check results of wxWidgets configure during the
-  build of wxPython. Currently used to determine if the wx webview library
-  should be added to the link command. (#1138)
+  build of wxPython. Currently used to determine if the wx webview, glcanvas,
+  and media libraries should be added to the link command. (#1138)
+
+* Fixed scrollbar issue with ListCtrlAutoWidthMixin (#1215)
+
+* Fixed file access in the wx.py and wx.tools.pywxrc packages to be Python 2 and
+  3 compatible. (#1193, #1156)
+
+* Fixes for building with Python 3.8 on Linux. (#1227)
 
 
 

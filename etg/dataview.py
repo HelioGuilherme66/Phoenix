@@ -279,7 +279,12 @@ def run():
     # an out parameter.
     m.virtualCatcherCode = """\
         PyObject *sipResObj = sipCallMethod(&sipIsErr, sipMethod, "D", editor, sipType_wxWindow, NULL);
-        if (sipResObj == Py_None) {
+        if (sipResObj == NULL) {
+            if (PyErr_Occurred())
+                PyErr_Print();
+            sipRes = false;
+        }
+        else if (sipResObj == Py_None) {
             sipRes = false;
         } else {
             sipRes = true;
@@ -373,6 +378,8 @@ def run():
     c = module.find('wxDataViewCtrl')
     tools.fixWindowClass(c)
     module.addGlobalStr('wxDataViewCtrlNameStr', c)
+
+    tools.addEnableSystemTheme(c, 'wx.dataview.DataViewCtrl')
 
     c.find('AssociateModel.model').transfer = True
     c.find('AssociateModel').pyName = '_AssociateModel'

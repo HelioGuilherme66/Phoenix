@@ -74,11 +74,18 @@ def run():
 
     c = module.find('wxLog')
     assert isinstance(c, etgtools.ClassDef)
+    c.addPrivateCopyCtor()
+    c.addDefaultCtor('public')
+    c.addDtor('public', isVirtual=True)
+
 
     c.find('SetActiveTarget').transferBack = True
     c.find('SetActiveTarget.logtarget').transfer = True
     c.find('SetThreadActiveTarget').transferBack = True
     c.find('SetThreadActiveTarget.logger').transfer = True
+    c.find('SetFormatter').transferBack = True
+    c.find('SetFormatter.formatter').transfer = True
+
 
     # we need to un-ignore these protected methods as they need to be overridable
     c.find('DoLogRecord').ignore(False)

@@ -1,5 +1,4 @@
 #----------------------------------------------------------------------
-#----------------------------------------------------------------------
 # Name:        buildtools.config
 # Purpose:     Code to set and validate platform options and etc. for
 #              the wxPython build.  Moved to their own module and
@@ -172,6 +171,9 @@ class Configuration(object):
                              ('SIP_MODULE_NAME', 'wx.siplib'),
                              ('SIP_MODULE_BASENAME', 'siplib'),
                              ]
+            if int(getVisCVersion()) > 100:
+                self.defines += [ ('wxUSE_RC_MANIFEST', '1'),
+                                  ('wxUSE_DPI_AWARE_MANIFEST', '2') ]
 
             self.libs = []
             self.libdirs = [ opj(self.WXDIR, 'lib', self.VCDLL) ]
@@ -438,6 +440,7 @@ class Configuration(object):
             dest = opj(destdir, lang, 'LC_MESSAGES')
             mkpath(dest, verbose=verbose)
             copy_file(src, opj(dest, 'wxstd.mo'), update=1, verbose=verbose)
+            os.unlink(src)
             self.CLEANUP.append(opj(dest, 'wxstd.mo'))
             self.CLEANUP.append(dest)
 
@@ -589,6 +592,10 @@ class Configuration(object):
             return None
 
         setup = _find_setup()
+        if setup is None:
+            msg("WARNING: Unable to find setup.h in {}, assuming {} is not available.".format(build_dir, flag))
+            return False
+
         with open(setup, 'rt') as f:
             for line in f:
                 if flag in line:
@@ -825,7 +832,7 @@ def getVcsRev():
     return svnrev
 
 
-def runcmd(cmd, getOutput=False, echoCmd=True, fatal=True):
+def runcmd(cmd, getOutput=False, echoCmd=True, fatal=True, onError=None):
     """
     Runs a give command-line command, optionally returning the output.
     """
@@ -867,6 +874,8 @@ def runcmd(cmd, getOutput=False, echoCmd=True, fatal=True):
         print("Command '%s' failed with exit code %d." % (cmd, rval))
         if getOutput:
             print(output)
+        if onError is not None:
+            onError()
         if fatal:
             sys.exit(rval)
 
@@ -959,12 +968,35 @@ def updateLicenseFiles(cfg):
     # Copy the license files from wxWidgets
     mkpath('license')
     for filename in ['preamble.txt', 'licence.txt', 'lgpl.txt', 'gpl.txt']:
-        copy_file(opj(cfg.WXDIR, 'docs', filename), opj('license',filename), update=1, verbose=1)
+        copy_file(opj(cfg.WXDIR, 'docs', filename), opj('license',filename),
+                      update=1, verbose=1)
+
+    # Get the sip license too
+    copy_file(opj('sip', 'siplib', 'LICENSE'), opj('license', 'sip-license.txt'),
+              update=1, verbose=1)
 
     # Combine the relevant files into a single LICENSE.txt file
     text = ''
-    for filename in ['preamble.txt', 'licence.txt', 'lgpl.txt']:
+    for filename in ['preamble.txt', 'licence.txt', 'lgpl.txt', 'sip-license.txt']:
         with open(opj('license', filename), 'r') as f:
             text += f.read() + '\n\n'
     with open('LICENSE.txt', 'w') as f:
         f.write(text)
+
+try:
+    from tempfile import TemporaryDirectory
+except ImportError:
+    from tempfile import mkdtemp
+
+    class TemporaryDirectory(object):
+        def __init__(self, suffix='', prefix='tmp', dir=None):
+            self.name = mkdtemp(suffix, prefix, dir)
+
+        def __enter__(self):
+            return self.name
+
+        def __exit__(self, exc, value, tb):
+            self.cleanup()
+
+        def cleanup(self):
+            shutil.rmtree(self.name)

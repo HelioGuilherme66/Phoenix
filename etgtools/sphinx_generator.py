@@ -1042,7 +1042,7 @@ class Section(Node):
         text = Node.Join(self, with_tail=False)
 
         if not text.strip() or len(text.strip()) < 3:
-            # Empy text or just trailing commas
+            # Empty text or just trailing commas
             return ''
 
         if self.is_overload and self.share_docstrings:
@@ -1064,6 +1064,12 @@ class Section(Node):
                     if version.endswith('.'):
                         version = version[0:-1]
                     text = '%s\n%s%s'%(version, sub_spacer, text)
+
+                # Show both the wxPython and the wxWidgets version numbers for
+                # versions >= 3. That's not entirely accurate, but close enough.
+                if text.startswith('3.'):
+                    wx_ver = text[:5]
+                    text = '4.{}/wxWidgets-{} {}'.format(wx_ver[2], wx_ver, text[5:])
 
         elif section_type == 'deprecated':
             # Special treatment for deprecated, wxWidgets devs do not put the version number
@@ -1917,6 +1923,27 @@ class ULink(Node):
 
 # ----------------------------------------------------------------------- #
 
+class DashBase(Node):
+    dash_text = '-'
+
+    def Join(self, with_tail=True):
+        text = self.dash_text
+        if self.element.text:
+            text += self.element.text
+        if with_tail and self.element.tail:
+            text += convertToPython(self.element.tail)
+        return text
+
+
+class EnDash(DashBase):
+    dash_text = u'\u2013'
+
+class EmDash(DashBase):
+    dash_text = u'\u2014'
+
+
+# ----------------------------------------------------------------------- #
+
 class XMLDocString(object):
     """
     This is the main class of this script, and it uses heavily the :class:`Node`
@@ -1985,7 +2012,7 @@ class XMLDocString(object):
         if hasattr(xml_item, 'deprecated') and xml_item.deprecated and isinstance(xml_item.deprecated, string_base):
             element = et.Element('deprecated', kind='deprecated')
             element.text = xml_item.deprecated
-            
+
             deprecated_section = Section(element, None, self.kind, self.is_overload, self.share_docstrings)
             self.root.AddSection(deprecated_section)
 
@@ -2216,6 +2243,11 @@ class XMLDocString(object):
 
             self.root.AddSection(section)
             rest_class = parent
+
+        elif tag == 'ndash':
+            rest_class = EnDash(element, parent)
+        elif tag == 'mdash':
+            rest_class = EmDash(element, parent)
 
         else:
             rest_class = Node('', parent)
@@ -2869,15 +2901,13 @@ class XMLDocString(object):
                 pickleItem(desc, self.current_module, self.class_name, 'class')
 
         if self.overloads:
-
             docstrings += '\n\n%s|overload| Overloaded Implementations:\n\n'%spacer
-            docstrings += '%s**~~~**\n\n'%spacer
+            docstrings += '%s:html:`<hr class="overloadsep" /><br />`\n\n'%spacer
 
             for index, over in enumerate(self.overloads):
                 for line in over.splitlines():
                     docstrings += spacer + line + '\n'
-
-                docstrings += '%s**~~~**\n\n'%spacer
+                docstrings += '%s:html:`<hr class="overloadsep" /><br />`\n\n'%spacer
 
         if '**Perl Note:**' in docstrings:
             index = docstrings.index('**Perl Note:**')

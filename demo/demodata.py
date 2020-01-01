@@ -24,10 +24,10 @@ _demoPngs = ["overview", "recent", "frame", "dialog", "moredialog", "core",
 #
 # _treeList
 #
-# These are the Demo Catagory Headers
+# These are the Demo Category Headers
 # and Demo Module Names(Ex: Frame.py without ext)
 #
-# ('Demo Catagory Name String', [
+# ('Demo Category Name String', [
 #       'DemoModuleName1',
 #       'DemoModuleName2',
 #       'Etc',
@@ -43,6 +43,10 @@ _treeList = [
         'DynamicSashWindow',
         'TreeListCtrl',
         'NotificationMessage',
+        'AddPrivateFont',
+        'SVGImage_Bitmap',
+        'SVGImage_Render',
+        'ActivityIndicator',
     ]),
 
     # managed windows == things with a (optional) caption you can close
@@ -83,6 +87,7 @@ _treeList = [
 
     # core controls
     ('Core Windows/Controls', [
+        'ActivityIndicator',
         'BitmapButton',
         'Button',
         'CheckBox',
@@ -253,6 +258,8 @@ _treeList = [
         'Img2PyArtProvider',
         'Mask',
         'RawBitmapAccess',
+        'SVGImage_Bitmap',
+        'SVGImage_Render',
         'Throbber',
     ]),
 
@@ -263,11 +270,11 @@ _treeList = [
         'Cairo',
         'Cairo_Snippets',
         'ColourDB',
-        ##'DialogUnits',   # needs more explanations
         'DragScroller',
         'DrawXXXList',
         'FileHistory',
         'FontEnumerator',
+        'AddPrivateFont',
         'GetMouseState',
         'GraphicsContext',
         'GraphicsGradient',
@@ -286,6 +293,8 @@ _treeList = [
         'ShapedWindow',
         'Sound',
         'StandardPaths',
+        'SVGImage_Bitmap',
+        'SVGImage_Render',
         'SystemSettings',
         'ToolTip',
         'UIActionSimulator',

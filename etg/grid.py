@@ -23,6 +23,7 @@ ITEMS  = [ 'wxGridCellCoords',
            'wxGridCellStringRenderer',
            'wxGridCellAutoWrapStringRenderer',
            'wxGridCellBoolRenderer',
+           'wxGridCellDateRenderer',
            'wxGridCellDateTimeRenderer',
            'wxGridCellEnumRenderer',
            'wxGridCellFloatRenderer',
@@ -30,6 +31,7 @@ ITEMS  = [ 'wxGridCellCoords',
 
            'wxGridCellEditor',
            'wxGridCellTextEditor',
+           'wxGridCellDateEditor',
            'wxGridCellAutoWrapStringEditor',
            'wxGridCellBoolEditor',
            'wxGridCellChoiceEditor',
@@ -81,11 +83,14 @@ def run():
         GRID_VALUE_NUMBER =    "long"
         GRID_VALUE_FLOAT =     "double"
         GRID_VALUE_CHOICE =    "choice"
+        GRID_VALUE_DATE =      "date"
         GRID_VALUE_TEXT =      "string"
         GRID_VALUE_LONG =      "long"
         GRID_VALUE_CHOICEINT = "choiceint"
         GRID_VALUE_DATETIME =  "datetime"
         """)
+
+    module.insertItem(0, etgtools.TypedefDef(type='wxWindow', name='wxGridWindow'))
 
     #-----------------------------------------------------------------
     c = module.find('wxGridCellCoords')
@@ -238,14 +243,19 @@ def run():
                 result = sipCallMethod(0, sipMethod, "iiDN", row, col,
                                        const_cast<wxGrid *>(grid),sipType_wxGrid,NULL,
                                        new wxString(oldval),sipType_wxString,NULL);
-                if (result == Py_None) {
+                if (result == NULL) {
+                    if (PyErr_Occurred())
+                        PyErr_Print();
+                    sipRes = false;
+                }
+                else if (result == Py_None) {
                     sipRes = false;
                 }
                 else {
                     sipRes = true;
                     *newval = Py2wxString(result);
                 }
-                Py_DECREF(result);
+                Py_XDECREF(result);
                 """  if pureVirtual else "",  # only used with the base class
             )
 
@@ -332,7 +342,12 @@ def run():
     m.virtualCatcherCode = """\
         // virtualCatcherCode for GridTableBase.GetValue
         PyObject *result = sipCallMethod(&sipIsErr, sipMethod, "ii", row, col);
-        if (result == Py_None) {
+        if (result == NULL) {
+            if (PyErr_Occurred())
+                PyErr_Print();
+            sipRes = "";
+        }
+        else if (result == Py_None) {
             sipRes = "";
         }
         else {
@@ -409,7 +424,7 @@ def run():
     #-----------------------------------------------------------------
     c = module.find('wxGrid')
     tools.fixWindowClass(c, ignoreProtected=False)
-    c.bases = ['wxScrolledWindow']
+    c.bases = ['wxScrolledCanvas']
 
     c.find('GetColLabelAlignment.horiz').out = True
     c.find('GetColLabelAlignment.vert').out = True
@@ -476,6 +491,8 @@ def run():
 
     c.find('SetCellAlignment').findOverload('align').ignore()
     c.find('SetCellTextColour').overloads = []
+
+    c.find('GetGridWindowOffset').findOverload('int &x').ignore()
 
     #-----------------------------------------------------------------
     c = module.find('wxGridUpdateLocker')

@@ -24,6 +24,7 @@ ITEMS  = [ 'wxWebViewHistoryItem',
            'wxWebView',
            'wxWebViewEvent',
            'wxWebViewFactory',
+           'wxWebViewIE',
            ]
 
 #---------------------------------------------------------------------------
@@ -50,6 +51,28 @@ def run():
     module.addGlobalStr('wxWebViewBackendWebKit', 0)
     module.addGlobalStr('wxWebViewNameStr', 0)
     module.addGlobalStr('wxWebViewDefaultURLStr', 0)
+
+    module.addHeaderCode("""\
+        #if wxUSE_WEBVIEW && !defined(wxWebViewIE_H)
+        enum wxWebViewIE_EmulationLevel
+        {
+            wxWEBVIEWIE_EMU_DEFAULT =    0,
+            wxWEBVIEWIE_EMU_IE7 =        7000,
+            wxWEBVIEWIE_EMU_IE8 =        8000,
+            wxWEBVIEWIE_EMU_IE8_FORCE =  8888,
+            wxWEBVIEWIE_EMU_IE9 =        9000,
+            wxWEBVIEWIE_EMU_IE9_FORCE =  9999,
+            wxWEBVIEWIE_EMU_IE10 =       10000,
+            wxWEBVIEWIE_EMU_IE10_FORCE = 10001,
+            wxWEBVIEWIE_EMU_IE11 =       11000,
+            wxWEBVIEWIE_EMU_IE11_FORCE = 11001
+        };
+        #endif
+        """)
+
+    # Pull out the obj for wxWebViewIE so we can use it later, but not include it in the stubs
+    wvie = module.find('wxWebViewIE')
+    module.items.remove(wvie)
 
     # This tweak is needed only for the stub code
     module.find('wxWebViewHandler.wxWebViewHandler').argsString = '(const wxString& scheme="")'
@@ -116,14 +139,79 @@ def run():
     ##    "sipCpp->LoadHistoryItem(wxSharedPtr<wxWebViewHistoryItem>(item));")
 
 
-    c.find('MSWSetModernEmulationLevel').setCppCode("""\
+    # Add the MSW methods in wxWebViewIE into the main WebView class like they were before.
+    c.addItem(wvie.find('MSWSetEmulationLevel'))
+    c.addItem(wvie.find('MSWSetModernEmulationLevel'))
+
+    # Give them an implementation that doesn't matter which class they are actually located in.
+    c.find('MSWSetEmulationLevel').setCppCode("""\
         #if wxUSE_WEBVIEW_IE && defined(__WXMSW__)
-            return wxWebViewIE::MSWSetModernEmulationLevel(modernLevel);
+            return _do_MSWSetEmulationLevel(level);
         #else
             return false;
         #endif
         """)
 
+    c.find('MSWSetModernEmulationLevel').setCppCode("""\
+        #if wxUSE_WEBVIEW_IE && defined(__WXMSW__)
+            return _do_MSWSetEmulationLevel(modernLevel ? wxWEBVIEWIE_EMU_IE8
+                                                        : wxWEBVIEWIE_EMU_DEFAULT);
+        #else
+            return false;
+        #endif
+        """)
+
+    # The emulation level is set as a per-application value in the Windows
+    # Registry. The way this is implemented in the C++ code we end up with the
+    # name of the _core extransion module in the Reistry instead of the .exe
+    # name, which is what is really needed.
+    #
+    # So instead of doing simple wrappers with #if checks like normal, replace
+    # these methods with a new implementation that does the RightThing using
+    # sys.executable.
+    c.addCppCode(r"""
+        #if wxUSE_WEBVIEW_IE && defined(__WXMSW__)
+        #include <wx/msw/webview_ie.h>
+        #include <wx/msw/registry.h>
+
+        bool _do_MSWSetEmulationLevel(wxWebViewIE_EmulationLevel level)
+        {
+            wxString programName;
+            wxPyBLOCK_THREADS(
+                programName = Py2wxString(PySys_GetObject("executable")));
+            programName = programName.AfterLast('\\');
+
+            // Registry key where emulation level for programs are set
+            static const wxChar* IE_EMULATION_KEY =
+                wxT("SOFTWARE\\Microsoft\\Internet Explorer\\Main")
+                wxT("\\FeatureControl\\FEATURE_BROWSER_EMULATION");
+
+            wxRegKey key(wxRegKey::HKCU, IE_EMULATION_KEY);
+            if ( !key.Exists() )
+            {
+                wxLogWarning(_("Failed to find web view emulation level in the registry"));
+                return false;
+            }
+            if ( level != wxWEBVIEWIE_EMU_DEFAULT )
+            {
+                if ( !key.SetValue(programName, level) )
+                {
+                    wxLogWarning(_("Failed to set web view to modern emulation level"));
+                    return false;
+                }
+            }
+            else
+            {
+                if ( !key.DeleteValue(programName) )
+                {
+                    wxLogWarning(_("Failed to reset web view to standard emulation level"));
+                    return false;
+                }
+            }
+            return true;
+        }
+        #endif
+        """)
 
 
     c = module.find('wxWebViewEvent')

@@ -361,6 +361,36 @@ def FindImages(text, widgetName):
     return winAppearance
 
 
+def GetCaretPeriod(win = None):
+    """
+    Attempts to identify the correct caret blinkrate to use in the Demo Code panel.
+
+    :pram wx.Window win: a window to pass to wx.SystemSettings.GetMetric.
+
+    :return: a value in milliseconds that indicates the proper period.
+    :rtype: int
+
+    :raises: ValueError if unable to resolve a proper caret blink rate.
+    """
+    if '--no-caret-blink' in sys.argv:
+        return 0
+
+    try:
+        onmsec  = wx.SystemSettings.GetMetric(wx.SYS_CARET_ON_MSEC, win)
+        offmsec = wx.SystemSettings.GetMetric(wx.SYS_CARET_OFF_MSEC, win)
+
+        # check values aren't -1
+        if -1 in (onmsec, offmsec):
+            raise ValueError("Unable to determine caret blink rate.")
+
+        # attempt to average.
+        # (wx systemsettings allows on and off time, but scintilla just takes a single period.)
+        return (onmsec + offmsec) / 2.0
+
+    except AttributeError:
+        # Issue where wx.SYS_CARET_ON/OFF_MSEC is unavailable.
+        raise ValueError("Unable to determine caret blink rate.")
+
 #---------------------------------------------------------------------------
 # Set up a thread that will scan the wxWidgets docs for window styles,
 # events and widgets screenshots
@@ -611,6 +641,12 @@ try:
             self.SetCaretForeground("BLUE")
             # Selection background
             self.SetSelBackground(1, '#66CCFF')
+
+            # Attempt to set caret blink rate.
+            try:
+                self.SetCaretPeriod(GetCaretPeriod(self))
+            except ValueError:
+                pass
 
             self.SetSelBackground(True, wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHT))
             self.SetSelForeground(True, wx.SystemSettings.GetColour(wx.SYS_COLOUR_HIGHLIGHTTEXT))
@@ -932,7 +968,8 @@ def SearchDemo(name, keyword):
     fullText = fid.read()
     fid.close()
 
-    fullText = fullText.decode("iso-8859-1")
+    if six.PY2:
+        fullText = fullText.decode("iso-8859-1")
 
     if fullText.find(keyword) >= 0:
         return True
@@ -1658,8 +1695,7 @@ class wxPythonDemo(wx.Frame):
                            wx.ITEM_CHECK)
         self.Bind(wx.EVT_MENU, self.OnToggleRedirect, item)
 
-        wx.App.SetMacExitMenuItemId(9123)
-        exitItem = wx.MenuItem(menu, 9123, 'E&xit\tCtrl-Q', 'Get the heck outta here!')
+        exitItem = wx.MenuItem(menu, wx.ID_EXIT, 'E&xit\tCtrl-Q', 'Get the heck outta here!')
         exitItem.SetBitmap(images.catalog['exit'].GetBitmap())
         menu.Append(exitItem)
         self.Bind(wx.EVT_MENU, self.OnFileExit, exitItem)
@@ -2557,7 +2593,7 @@ class wxPythonDemo(wx.Frame):
 
     #---------------------------------------------
     def OnIconfiy(self, evt):
-        wx.LogMessage("OnIconfiy: %s" % evt.Iconized())
+        wx.LogMessage("OnIconfiy: %s" % evt.IsIconized())
         evt.Skip()
 
     #---------------------------------------------
@@ -2585,7 +2621,7 @@ class MySplashScreen(SplashScreen):
                                  wx.adv.SPLASH_CENTRE_ON_SCREEN | wx.adv.SPLASH_TIMEOUT,
                                  5000, None, -1)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.fc = wx.CallLater(2000, self.ShowMain)
+        self.fc = wx.CallLater(1000, self.ShowMain)
 
 
     def OnClose(self, evt):

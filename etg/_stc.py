@@ -87,6 +87,8 @@ def run():
     c.find('PositionToXY.x').out = True
     c.find('PositionToXY.y').out = True
 
+    c.find('FindText.findEnd').out = True
+
     # Split the HitTest overloads into separately named methods since once
     # the output parameters are applied they will have the same function
     # signature.
@@ -191,6 +193,8 @@ def run():
             self->RegisterRGBAImage(type, (unsigned char*)pixels->m_ptr);
             """)
 
+    c.find('MarkerDefinePixmap').ignore()
+    c.find('RegisterImage').findOverload('xpmData').ignore()
 
     # TODO:  Add the UTF8 PyMethods from classic (see _stc_utf8_methods.py)
 

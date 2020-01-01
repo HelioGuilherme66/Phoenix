@@ -39,12 +39,11 @@ class ScrolledMessageDialog(wx.Dialog):
 
         ok = wx.Button(self, wx.ID_OK, "OK")
         ok.SetDefault()
-        lc = layoutf.Layoutf('t=t5#1;b=t5#2;l=l5#1;r=r5#1', (self,ok))
-        text.SetConstraints(lc)
 
-        lc = layoutf.Layoutf('b=b5#1;x%w50#1;w!80;h*', (self,))
-        ok.SetConstraints(lc)
-        self.SetAutoLayout(1)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.text, wx.SizerFlags(1).Border().Expand())
+        sizer.Add(ok, wx.SizerFlags().Border().Center())
+        self.SetSizer(sizer)
         self.Layout()
 
 
@@ -443,7 +442,7 @@ class MultiMessageDialog(wx.Dialog):
                      ))
         self.Bind(wx.EVT_BUTTON, self.OnButton)
         if btnLabels:
-            for sid, label in btnLabels.iteritems():
+            for sid, label in btnLabels.items():
                 btn = self.FindWindow(sid)
                 if btn:
                     btn.SetLabel(label)
